@@ -1,0 +1,225 @@
+---
+title: "Maternal health visualization"
+output: html_notebook
+---
+
+```{r loading packages}
+library(haven)
+library(ggplot2)
+library(ggstats)
+```
+
+```{r import data, include = FALSE}
+maternalhealth <- read.csv(file = "Dataset_maternal_mental_health_infant_sleep.csv")
+str(maternalhealth)
+```
+
+```{r Histogram of one continuous variable with a normal curve}
+# Remove rows with NA values in the Age column using subset
+maternalhealth_clean <- subset(maternalhealth, Age != "NA")
+
+#simple histogram
+SimpAgeHist <- ggplot(maternalhealth_clean, aes(x = Age)) +
+  geom_histogram()
+SimpAgeHist
+#add aesthetics
+MotherAgeHist <- ggplot(maternalhealth_clean, aes(x = Age)) +
+  geom_histogram(aes(x = Age,
+                     after_stat(density)), 
+                 alpha = 0.7, 
+                 binwidth = 1,
+                color="pink" )
+MotherAgeHist
+#add normal curve
+MotherAgeHist2 <- MotherAgeHist + 
+  stat_function(fun = dnorm, 
+                args = list(mean = mean(maternalhealth$Age, na.rm= TRUE), 
+                            sd = sd(maternalhealth$Age, na.rm= TRUE)), 
+                col = "purple", lwd = 0.5, lty = "dashed") 
+MotherAgeHist2
+```
+This histogram shows the distribution of the age of the mothers in the dataset. The distribution is approximately normal with a slight right skew. The median age appears to be 30 years old with most individuals ages being concentrated around 25-35 years old. The slight right skew suggests that a signifcant portion of the mothers in the study are 30+ years old.
+
+```{r box plot of a continuous variable }
+# 1. Calculate Total Scores 
+maternalhealth_df2 <- maternalhealth
+
+maternalhealth_df2$CBTS_M_total <- rowSums(maternalhealth[, c("CBTS_M_3", "CBTS_M_4", "CBTS_M_5", "CBTS_M_6", "CBTS_M_7", "CBTS_M_8", "CBTS_M_9", "CBTS_M_10", "CBTS_M_11", "CBTS_M_12", "CBTS_13", "CBTS_14", "CBTS_15", "CBTS_16", "CBTS_17", "CBTS_18", "CBTS_19", "CBTS_20", "CBTS_21", "CBTS_22")], na.rm = TRUE)
+maternalhealth_df2$EPDS_total <- rowSums(maternalhealth[, c("EPDS_1", "EPDS_2", "EPDS_3", "EPDS_4", "EPDS_5", "EPDS_6", "EPDS_7", "EPDS_8", "EPDS_9", "EPDS_10")], na.rm = TRUE)
+maternalhealth_df2$HADS_total <- rowSums(maternalhealth[, c("HADS_1", "HADS_3", "HADS_5", "HADS_7", "HADS_9", "HADS_11", "HADS_13")], na.rm = TRUE)
+
+# 2. Create Scale Categories
+maternalhealth_df2$CBTS_M_category <- factor(ifelse(maternalhealth_df2$CBTS_M_total <= 20, "Low",  
+                             ifelse(maternalhealth_df2$CBTS_M_total <= 40, "Moderate", "High")),  
+                             levels = c("Low", "Moderate", "High"))
+
+maternalhealth_df2$EPDS_category <- factor(ifelse(maternalhealth_df2$EPDS_total <= 10, "Low",  
+                             ifelse(maternalhealth_df2$EPDS_total <= 20, "Moderate", "High")),  
+                             levels = c("Low", "Moderate", "High"))
+
+maternalhealth_df2$HADS_category <- factor(ifelse(maternalhealth_df2$HADS_total <= 7, "Low",  
+                             ifelse(maternalhealth_df2$HADS_total <= 14, "Moderate", "High")),  
+                             levels = c("Low", "Moderate", "High"))
+
+maternalhealth_df2$night_awakening_number_bb1 <- as.numeric(maternalhealth_df2$night_awakening_number_bb1)
+
+# 3.  Reshape
+
+cbts_df <- data.frame(
+  night_awakening_number_bb1 = maternalhealth_df2$night_awakening_number_bb1,
+  Category = maternalhealth_df2$CBTS_M_category,
+  Scale = "CBTS_M"
+)
+
+epds_df <- data.frame(
+  night_awakening_number_bb1 = maternalhealth_df2$night_awakening_number_bb1,
+  Category = maternalhealth_df2$EPDS_category,
+  Scale = "EPDS"
+)
+
+hads_df <- data.frame(
+  night_awakening_number_bb1 = maternalhealth_df2$night_awakening_number_bb1,
+  Category = maternalhealth_df2$HADS_category,
+  Scale = "HADS"
+)
+
+# Combining  the data frames
+df_long <- rbind(cbts_df, epds_df, hads_df)
+
+# 4. Faceted Boxplot ( base R)
+par(mfrow = c(1, 3), mar = c(5, 4, 4, 2)) # Arrange plots in 1x3 grid, adjusting margins
+
+scales <- unique(df_long$Scale)
+
+#  Footnotes for each scale definitions
+footnotes <- list(
+  "CBTS_M" = "CBTS: Low (<=20), Moderate (<=40), High (>40)",
+  "EPDS" = "EPDS: Low (<=10), Moderate (<=20), High (>20)",
+  "HADS" = "HADS: Low (<=7), Moderate (<=14), High (>14)"
+)
+
+# Creating  separate  plots
+for (scale_name in scales) {
+  scale_data <- df_long[df_long$Scale == scale_name,]
+  
+  boxplot(scale_data$night_awakening_number_bb1 ~ scale_data$Category,
+          main = paste("Scale:", scale_name),  
+          xlab = "Score Severity",  
+          ylab = "Number of Night Awakenings",  
+          cex.axis = 0.8,  # Make x-axis labels smaller to avoid overlap
+          border = "black")  # Border color to make boxes visible
+
+  mtext(footnotes[[scale_name]], side = 1, line = 4, cex = 0.5, adj = 0.5)  
+}
+
+# main title)
+mtext("Infant Night Awakenings by Postpartum Mental Health Scores", side = 3, line = -1, cex = 0.75, font = 2, outer = TRUE)
+
+
+par(mfrow = c(1, 1)) # Reset plotting parameters
+
+```
+This faceted boxplot displays the distribution of the number of times infants aged 0-12 months wake up in the middle of the night according to mothers’ postpartum mental health scores. According to research, the City Birth Trauma Scale (CBTS) ranges from 0-60 with the higher end of the scale indicating greater severity; the Edinburgh Postnatal Depression Scale (EDPS) ranges from 0-40; the Hospital Anxiety and Depression Scale ranges from 0-21. This visualization strongly suggests that infants of mothers who score high in any of these three postpartum mental health surveys tend to wake up more often than infants of the low and moderate scoring severity groups (Sandoz et al, 2021). 
+#source:Sandoz, Vania & Hingray, Coraline & Ravenscroft/Stuijfzand, Suzannah & Lacroix, Alain & El-Hage, Wissam & Horsch, Antje. (2021). Measurement and Conceptualization of Maternal PTSD Following Childbirth: Psychometric Properties of the City Birth Trauma Scale—French Version (City BiTS-F). Psychological trauma : theory, research, practice and policy. 14. 10.1037/tra0001068.  
+
+```{r pie chart for a categorical variable}
+#frequency info
+table(maternalhealth$Age_bb)
+# Frequency table for marital status saved as new data frame
+babyAge <- data.frame(Responses = c("3-6mo", "6-9mo", "9-12 mo"), 
+                            "freq" = c(147, 133, 130))
+
+# Generate plot
+agePie <- ggplot(babyAge, aes(x = "", 
+                                  y = freq, 
+                                  fill = factor(Responses))) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar(theta = "y") +
+  labs(title = "Age Ranges of Participant Babies", 
+       caption = "N = 410", 
+       fill = "Responses") +
+  geom_text(aes(label = paste(round(freq / sum(freq) * 100, 1), "%"), 
+                x = 1.7), 
+            position = position_stack(vjust = 0.5)) +
+    scale_fill_brewer(palette = "Spectral") +
+  theme_void()
+agePie
+```
+ There was a pretty even distribution of infant age ranges within the sample population. By a margin of 3.5% or 14 babies, the highest frequency of infants were between 3 and 6 months of age at the time the study was conducted. The lowest frequency of babies were between 9 and 12 months.
+
+```{r bar chart for a categorical variable}
+#exclude na values, include = FALSE
+clean_barchart <- subset(maternalhealth, Age_bb != "NA")
+#making barchart, include = FALSE
+barinfant <- ggplot(clean_barchart , aes(x = factor(Age_bb))) +  
+  geom_bar(aes(fill = factor(Age_bb)), alpha = 0.8, width = 0.8) + 
+  geom_text(aes(y = after_stat(count), label = paste("n = ", after_stat(count))), stat = "count", vjust = -0.5) +
+  geom_text(stat = "prop", vjust = 1.5) +
+  labs(title = "Infant Age", 
+       caption = "N = 1047882") + 
+  xlab("Infant Age Range") + 
+  ylab("Count") +
+  scale_fill_manual(values = RColorBrewer::brewer.pal(3, "Spectral"), 
+                    labels = c("3-6Mo", "6-9Mo", "9-12Mo")) +  # Custom legend labels
+  scale_x_discrete(breaks = c(1, 2, 3), labels = c("3-6Mo", "6-9Mo", "9-12Mo")) +  # Map labels to breaks
+  theme_minimal() +
+  theme(legend.position = "none")  #exclude legend
+
+barinfant
+```
+This barplot reveals the frequency or count of the different ranges of infants from the study.
+
+```{r scatterplot showing the relationship between the two continuous variables}
+# Remove rows with NA values in the Age column using subset
+maternalhealth_first_filtered <- subset(maternalhealth, Age != "NA")
+
+#Basic plot Using variables: Age(age of mother) & night_awakening_number_bb1(Night awakenings)
+scatterMaternalHealthNight <- ggplot(maternalhealth_first_filtered, aes(x = Age, y = night_awakening_number_bb1)) +
+  geom_point() +
+  # stat_smooth is the stat equivalent of geom_smooth, "lm" is "linear model" (default is "loess")
+  stat_smooth(formula = y ~ x, method = "lm") +
+  labs(title = "Mother's Age with Night Awakening's in First Year",
+       caption = "N = 410", 
+       color = "Age of Babies") +
+  xlab("Age of Mother in years") +
+  ylab("Night Awakening's") +
+  scale_color_brewer(palette = "Paired")
+
+scatterMaternalHealthNight 
+
+#------Detailed plot with Facets using variables: Age(age of mother) & night_awakening_number_bb1(number of times baby wakes up at night) by Age_bb(age of baby in months)--------
+
+# Remove rows with NA values in the Age_bb column using subset
+maternalhealth_filtered <- subset(maternalhealth, Age_bb != "NA")
+# Creation of Scatterplot
+scatterMaternalHealthFacetFinal <- ggplot(maternalhealth_filtered, aes(x = Age, y = night_awakening_number_bb1)) +
+  geom_point(aes(color = factor(Age_bb)), 
+             shape = 18, alpha = 0.7) +
+  stat_smooth(color = "purple", 
+              formula = y ~ x,
+              method = "loess", #helps handle outliers
+              na.rm = TRUE, 
+              se = FALSE, 
+              linewidth = 0.5, 
+              linetype = "dashed") +
+  facet_wrap(vars(Age_bb)) +
+  labs(title = "Mother's Age with Night Awakening's in First Year by Age of Babies",
+       caption = "N = 410", 
+       color = "Age of Babies") +
+  xlab("Age of Mother in years") +
+  ylab("Night Awakening's") +
+  scale_color_brewer(palette = "Paired", labels = c("3-6Mo.", "6-9Mo.", "9-12Mo.")) + # Adds custom legend labels)
+  theme_minimal() +
+  theme(strip.text = element_blank())  # Remove facet labels (numbers)
+
+scatterMaternalHealthFacetFinal
+```
+ This Scatterplot shows the correlation strength of the mothers age in years ranging between 18 - 100(Age), and the amount of times the infant woke up in the night during the first year(night_awakening_number_bb1); Data is grouped by ordinal variable Age_bb: Age of the baby in months. The regression line in 3-6 months shows a moderate positive correlation in awakenings during the ages 25-32, with an uptick as age increases; Indicating post prime-childbearing years, night awakenings can increase in infants. The regression in 6-9 months shows a moderate negative correlation, with a significant drop in awakenings within the ‘high-risk’ pregnancy age(35+); This can signify that as the mother ages, the amount of awakenings decrease in this infant age range. The 9-12 months regression line presents a strong positive correlation between mother’s age and awakenings, with a significant trend from an estimated occurrence of 1-2 times to upwards of 3; Non-linear relationship shows some data points deviating significantly from overall trend. 
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+

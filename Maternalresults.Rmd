@@ -1,0 +1,477 @@
+---
+title: "Results and interpretations"
+Yamila Emanuel, Andrea Smith, Evie Starr, Unison Park, Maha Raya, Desire Omotoye
+output: html_notebook
+---
+```{r import data, include = FALSE}
+maternalhealth <- read.csv(file = "Dataset_maternal_mental_health_infant_sleep.csv")
+#str(maternalhealth)
+```
+
+```{r load packages}
+library(haven)
+library(ggplot2)
+library(ggstats)
+```
+#Question 1
+```{r A test of normality, including measures of skewness, comparing the mean to the median, histogram with normal curve overlaid, normal q-q plot, and significance test for normality for the continuous variable used in the following two tests }
+
+shapiro.test(maternalhealth$night_awakening_number_bb1)
+```	
+
+Shapiro-Wilk normality test
+data:  maternalhealth$night_awakening_number_bb1
+ W = 0.8066, p-value < 2.2e-16
+
+Low p-value indicates non-normality of distribution because the Shapiro-Wilk test null hypothesis is that data are not normally distributed. 
+
+Skewness: 1.731061 (had to set na.rm = TRUE)
+
+```{r Measures of skewness}
+#measures of skewness
+Skew <- function(x, na.rm = TRUE){
+  if(na.rm) x <- x[!is.na(x)]
+  n <- length(x)
+  sum((x - mean(x))^3)/(n - 2)/var(x)^(3/2)
+}
+
+Skew(maternalhealth$night_awakening_number_bb1)
+
+#Histogram
+histAwake <- ggplot(maternalhealth, aes(night_awakening_number_bb1)) + 
+  geom_histogram(aes(x = night_awakening_number_bb1, after_stat(density)), fill = 'lightgreen', col = 'black') + 
+ geom_density() + 
+                  labs(title = "Distribution of Night Awakenings", 
+                       caption = "N = 1048292") + 
+                  xlab("Number of Night Awakenings") + 
+                  ylab("Density") + 
+                  theme_minimal()
+
+```
+Compare mean to median:
+Mean = 1.439024 (had to set na.rm = TRUE)
+Median = 1 (had to set na.rm = TRUE) 
+
+```{r Histogram with normal curve overlay: } 
+histAwake
+```
+
+```{r QQ Plot}
+qqnorm(maternalhealth$night_awakening_number_bb1, pch = 1, frame = FALSE)
+qqline(maternalhealth$night_awakening_number_bb1, col = "blue", lwd = 2)
+
+```
+The qq-plot is nonlinear, indicating a skewed distribution of the datapoints. This aligns with the histogram, which shows the data are left-skewed toward fewer night awakenings. Additionally, this histogram line of fit highlights that the data are not normally distributed. 
+
+Significance test for normality-
+Spearman's rank correlation rho:
+data:  sleepmat$night_awakening_number_bb1 and sleepmat$Marital_status
+S = 11875680, p-value = 0.4942
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+        rho 
+-0.03385764
+ → weak negative correlation between marital status and number of night awakenings. 
+
+
+#Question 2
+```{r A test for H0: μ =/</>, of your hypothesized value, including the 95%CI}
+newDf <- subset(maternalhealth, select = c("Age_bb"))
+agerange <- subset(newDf, select = c(1))
+t.test(agerange, mu = 0.8,  alternative = "two.sided")
+```
+
+Interpretation of results: The results of the one-sample t-test reveal that the true mean of times infants aged from 3-6 months wake up at night is not equal to  0.08. ($\bar{x} = 1.96 ) *p* < 0.05).  The 95% confidence interval for the true mean lies between 1.88 and 2.04.
+
+#Question 3
+```{r An independent samples or paired samples t-test (as appropriate), including the 95%CI}
+maternalhealth$Marital_status1 <- factor(maternalhealth$Marital_status, levels = c(1, 2), labels = c("Single", "In a Relationship"))
+t_test_result <- t.test(how_falling_asleep_bb1 ~ Marital_status1, data = maternalhealth, alternative = "two.sided", var.equal = FALSE)
+print(t_test_result)
+```
+Interpretation: The results from the two-sample t-test indicate a p-value of 0.471 which is greater than 0.05, thus we can conclude that there is no statistically significant difference between  the mean number of times a baby wakes up during the night between mothers who are single or those in a relationship. We are 95% confident that the true difference in the mean number of nighttime awakenings for these two marital status is between -0.67 and 1.38. Also, since the interval includes 0 we can also conclude that there is still no  significant difference in night awakenings based on marital status.
+
+#Question 4
+```{r A contingency table with a Chi-Square significant test for H0: independent between categorical variables. Include an odds ratio and relative risk for one comparison of categorical variables}
+table(maternalhealth$Age_bb, maternalhealth$how_falling_asleep_bb1)
+chiSq <- chisq.test(maternalhealth$Age_bb, y = maternalhealth$how_falling_asleep_bb1)
+chiSq
+chiSq$observed
+chiSq$expected
+chiSq$residuals
+```
+Interpretation: We reject the null hypothesis that there is not an association between the method in which the baby falls asleep and the age of the baby ($\chi^2$(8) = 19.09, *p* < .05). Specifically, those who are 3 to 6 months old are more likely to fall asleep while being fed, and less likely to fall asleep in the crib alone. Babies who are 6 to 9 months are more likely to fall asleep alone in the crib than expected. Most interestingly, babies who are 9 to 12 months are more likely to fall asleep in the crib with parental presence as opposed to being alone in the crib. The relative risk of a 3 to 6 month year old infant falling asleep while being fed is 1.87. Thus, we can  conclude that 3 to 6 month olds are 1.87 times more likely to fall asleep while being fed as compared to all other methods of putting a baby to sleep.
+
+#Question 5
+```{r A scatterplot of two continuous variables, and a linear correlation test for H0: π = 0}
+scatterCorr <- ggplot(maternalhealth, aes(x =Age, y = night_awakening_number_bb1)) +
+  geom_point(na.rm = TRUE, 
+             shape = 13, 
+             alpha = 0.8, 
+             color = "purple2") +
+  labs(title = "Baby's Night awakening by age of mother") +
+  xlab("Age in years") + 
+  ylab("Number of night awakening") + 
+  theme_minimal()
+scatterCorr
+
+#Linear Correlation test
+# Subset variables of interest
+nightage <- subset(maternalhealth, select = c("night_awakening_number_bb1", "Age"))
+# Data cleanup - age
+summary(nightage$Age)
+class(nightage$Age)
+
+# Turn "Refused" to NAs; coerce as numeric
+nightage$Age[nightage$Age == "Refused"] <- NA
+nightage$Age <- as.numeric(nightage$Age)
+
+# Data cleanup - Night awakening
+summary(nightage$night_awakening_number_bb1)
+class(nightage$night_awakening_number_bb1)
+
+# Turn "Refused" to NAs; coerce as numeric
+# Assumptions checks for normality 
+shapiro.test(nightage$Age)
+
+qqnorm(nightage$Age, pch = 1, frame = FALSE)
+qqline(nightage$Age, col = "purple", lwd = 2)
+
+shapiro.test(nightage$night_awakening_number_bb1)
+
+qqnorm(nightage$night_awakening_number_bb1, pch = 1, frame = FALSE)
+qqline(nightage$night_awakening_number_bb1, col = "pink", lwd = 2)
+
+# Run Pearson's R, store as new object
+nightagecorr <- cor.test(nightage$Age ,nightage$night_awakening_number_bb1,
+                       method = "pearson", 
+                       alternative = "two.sided", 
+                       na.action = na.exclude,
+                       exact = TRUE)
+
+nightagecorr 
+nightagecorr $conf.int
+
+```
+Interpretation: The scatter plot of baby's night awakenings by mother's age shows widely dispersed points with no clear linear pattern, suggesting minimal correlation between maternal age and nighttime wakings. While some outliers exist showing higher awakening frequencies (7-10 times) among mothers in their early 30s, most data points cluster between 0-5 awakenings across all age groups. The Q-Q plots indicate that while maternal age follows a relatively normal distribution, the night awakening variable shows significant deviation from normality with a step-like pattern and many zero values, suggesting a discrete, right-skewed distribution. This non-normality in the dependent variable may impact the validity of the Pearson correlation test used in the analysis.
+
+#Question 6
+```{r A scatterplot with estimated simple(ordinary) regression line}
+# Subset variables of interest
+nightage <- subset(maternalhealth, select = c("night_awakening_number_bb1", "Age"))
+# Data cleanup - Age
+summary(nightage$Age)
+class(nightage$Age)
+
+
+
+
+# Turn "Refused" to NAs; coerce as numeric
+nightage$Age[nightage$Age == "Refused"] <- NA
+nightage$Age <- as.numeric(nightage$Age)
+
+
+
+
+# Data cleanup - Night awakening
+summary(nightage$night_awakening_number_bb1)
+class(nightage$night_awakening_number_bb1)
+```
+```{r Night/Age Ordinary Regression Scatterplot w/ lm line}
+# Scatter for Age and Night Awakenings
+scatterLm <- ggplot(nightage, aes(x = Age, y = night_awakening_number_bb1)) +
+  geom_point(na.rm = TRUE, 
+             shape = 13, 
+             alpha = 0.8, 
+             color = "purple") +
+  geom_smooth(method = "lm", 
+              color = "red",
+              formula = y ~ x,
+              linewidth = 0.3, 
+              se = FALSE, 
+              na.rm = TRUE) +
+  labs(title = "Age of Mother by The Number of Night Awakenings") +
+  xlab("Age in years") + 
+  ylab("Night Awakenings") + 
+  theme_minimal()
+
+scatterLm
+```
+With the addition of the fit line, it does not move through points in our actual data; The line is relatively flat, indicating that the relationship between the age of the mother and number of infant night awakenings is not specifically strong
+
+#Question 7
+```{r A simple linear regression analysis, including a residual plot from the above linear regression analysis}
+# Remove rows with NA values in the Age column using subset
+maternalhealth_first_filtered <- subset(maternalhealth, Age != "NA")
+
+
+# To demonstrate the link between correlation and OLS Ord. Regression; same nightage
+nightageLM <- lm(night_awakening_number_bb1 ~ scale(Age), data = nightage, 
+               na.action = na.exclude)
+
+
+summary(nightageLM)
+
+
+# Diagnostic plots 
+plot(nightageLM, las = 1)
+```
+Interpretation: We fail to reject the null hypothesis that there is no association between age and number of night awakenings (F(1, 408) = 0.41, p = .524 | β = 0.05, t = 0.64, p = .524, R^2 = 0.001, Adjusted R^2 = -0.001). There is no significant association between age and night awakenings, such that one standard deviation increase in age predicts a 0.05 increase in night awakenings. However, we violate assumptions of normality of residuals and outliers are present; The residual distribution presents as having a right tail, indicating positive skewness. Thus, these results should be taken with caution.
+
+#Question 8
+```{r A multiple regression analysis, including variable selection,A scatterplot with significant values from the multiple regression analysis (1pt)}
+maternalhealth_df1 <- maternalhealth
+# Step 1: Convert to decimal hours
+maternalhealth_df1$Sleep_night_duration_bb1 <- sapply(strsplit(as.character(maternalhealth$Sleep_night_duration_bb1), ":"), function(x) {
+  as.numeric(x[1]) + as.numeric(x[2])/60
+})
+
+maternalhealth_df1$EPDS_total <- rowSums(maternalhealth[, c("EPDS_1", "EPDS_2", "EPDS_3", "EPDS_4", "EPDS_5", "EPDS_6", "EPDS_7", "EPDS_8", "EPDS_9", "EPDS_10")], na.rm = TRUE)
+```
+
+```{r examine variables of interest}
+maternalhealth_interest <- maternalhealth_df1[, c("EPDS_total", "night_awakening_number_bb1", "Sleep_night_duration_bb1")]
+
+
+# Use the summary command to examine variables
+summary(maternalhealth_interest)
+```
+```{r handle NAs}
+sum(!is.na(maternalhealth_interest$EPDS_total))
+# 410
+sum(is.na(maternalhealth_interest$EPDS_total))
+# 1047882
+
+
+maternalhealth_interest$Sleep_night_duration_bb1[maternalhealth_interest$Sleep_night_duration_bb1 == 100.65] <- NA
+# This is re-coded as NA because it was originally in the dataset as “99:99”, which indicates that it is a missing value and not an extreme outlier
+
+
+clean_maternal_lm_data <- na.omit(maternalhealth_interest[, c("night_awakening_number_bb1", "EPDS_total", "Sleep_night_duration_bb1")])
+```
+```{r variables of interest recheck}
+
+
+summary(clean_maternal_lm_data)
+```
+**We will determine if our data meets the assumptions by running the following to assess the distribution of our data…**
+```{r regression}
+model1 <- lm(night_awakening_number_bb1 ~ EPDS_total + Sleep_night_duration_bb1, data = clean_maternal_lm_data)
+summary(model1)
+# Print coefficient 95% confidence intervals
+confint(model1)
+# Diagnostics 
+plot(model1, las = 1)
+```
+Based on our results, a number of assumptions are violated. Our data is heteroscedastic and has some outliers as seen with points labeled 240, 237, and 280 in the Q-Q Residuals plot as well as the Cooks *d* and Leverage. This is a limitation we faced here as these influential observations may skew our results and are an indication of non-normal residuals . It is also important to note here that Sleep_night_duration_bb1, which is one of our predictors, varies greatly across baby age groups; this may explain the heteroscedasticity of our data. Our dataset covers babies from the ages of 3-12 months old.
+```{r scatterplot}
+# Create plot of regression line for age 
+EPDS_reg_plot <- ggplot(clean_maternal_lm_data, aes(x = EPDS_total, y = night_awakening_number_bb1)) +
+  geom_point(na.rm = TRUE, 
+             shape = 12, 
+             alpha = 0.8, 
+             color = "purple4", 
+             # Adding jitter, as number of days is an integer (shows concentration of points)
+             position = position_jitter(width = 0.1)) +
+  geom_smooth(method = "lm", 
+              color = "blue2", 
+              linewidth = 0.3, 
+              se = FALSE, 
+              na.rm = TRUE) +
+  labs(title = "Night Awakenings vs EPDS Total") +
+  xlab("Edinburgh Postnatal Depression Scale (EDPS)") +
+  ylab("Night Awakenings") +
+  theme_minimal()
+
+
+EPDS_reg_plot
+
+
+Sleep_reg_plot <- ggplot(clean_maternal_lm_data, aes(x = Sleep_night_duration_bb1, y = night_awakening_number_bb1)) +
+  geom_point(na.rm = TRUE, 
+             shape = 12, 
+             alpha = 0.8, 
+             color = "purple4", 
+             # Adding jitter, as number of days is an integer (shows concentration of points)
+             position = position_jitter(width = 0.1)) +
+  geom_smooth(method = "lm", 
+              color = "blue2", 
+              linewidth = 0.3, 
+              se = FALSE, 
+              na.rm = TRUE) +
+  labs(title = "Night Awakenings vs Sleep Duration") +
+  xlab("Sleep Duration at Night (hrs)") +
+  ylab("Night Awakenings") +
+  theme_minimal()
+Sleep_reg_plot
+```
+*Note:* Noise was added to scatterplot to display clustering of points and points are not absolute reflections of the data. 
+
+The EPDS vs. Night Awakenings scatterplot shows a slight upward trend, which is reflected in the positive slope of the fitted regression line; The Sleep Duration vs. Night Awakenings plot shows a slight downward trend, indicating a negative slope of the fitted regression line. The positive slope in the EPDS vs. Night awakenings scatterplot plot tells us that as the score increases, infant night awakenings also increase, although the association is not strong. The trend in the second plot tells us that as infants sleep longer at night, they tend to wake up fewer times during the night; longer the durations of sleep among infants are associated with fewer night awakenings. Neither of the plots above demonstrate a strong linear relationship because the spread is weak. The high variance in night awakenings across all values of both predictors suggests a nonlinear relationship.
+```{r VIF function}
+vif_func <- function(model1) {
+  # Extract the model matrix
+  X <- model.matrix(model1)[, -1]
+  
+  # Calculate VIF for each predictor
+  vif_values <- sapply(1:ncol(X), function(i) {
+    
+    # Fit the model
+    reg <- lm(X[, i] ~X[, -i])
+    
+    # Calculate VIF
+    1 / (1-summary(reg)$r.squared)
+  })
+  
+  # Name the VIF values with predictor names
+  names(vif_values) <- colnames(X)
+  
+  # Print results
+  return(vif_values)
+}
+```
+```{r check VIF}
+vif_func(model1)
+```
+The VIF for both predictors is 1.040626, which is well below 3. This indicates that our two predictors are not highly correlated with each other, and there's no concern about multicollinearity in our model. Our assumption of no multicollinearity is checked and we can confidently include both variables in a regression model.
+```{r evaluate outliers}
+# By Cook's d
+cooksd <- cooks.distance(model1)
+
+
+# Plot by Cooks d
+plot(cooksd, pch = "", cex = 2, main = "Influential Obs by Cooks d")
+abline(h = 4*mean(cooksd, na.rm = TRUE), col = "red")
+text(x = 1:length(cooksd) + 1, y = cooksd, 
+     labels = ifelse(cooksd > 4*mean(cooksd, na.rm = TRUE), 
+                     names(cooksd), ""), col = "red")
+
+
+# Look in dataset
+influential <- as.numeric(names(cooksd)[(cooksd > 4*mean(cooksd, na.rm = T))])
+
+
+list(maternalhealth_interest[influential, ])
+```
+We used Cook's distance to inspect and evaluate the outliers. After inspecting the outliers here, we have concluded that they are not extreme or a cause for concern. Initially, there was *one* outlier that was found that was was in the original dataset as "99:99", which indicates missing data, rather than a true time value. We re-coded it as NA and omitted it with the other NAs.
+```{r robust standard errors}
+# Load packages
+library("lmtest")
+#install.packages("sandwich")
+library("sandwich")
+
+
+# Re-run model
+model1_rb <- coeftest(model1, 
+                     vcov = vcovHC)
+
+
+model1_rb
+# Compare to original
+summary(model1)
+```
+Because we observed heteroscedasticity in our residuals, we have executed robust standard errors to account for this violation of assumption for multiple linear regression. From the results, we found that when accounting for heteroscedasticity, the intercept is highly significant, with a p-value of 2.86e-13, the EPDS_total is *not* significant, with a p-value of 0.1717, and the Sleep_night_duration_bb1 is also highly significant, with a p-value of 2.26e-08. The negative coefficient indicates that longer sleep duration is associated with fewer night awakenings. The overall F-statistic is 3.287e-09, and indicates that the independent variables in our model collectively explain a statistically significant amount of the variance in the dependent variable (night_awakening_number_bb1).
+
+#Question 9
+```{r A logistic regression analysis }
+# Subset marital status, sleep duration of infant, and EPDS_7: "I have been so unhappy that I have had difficulty sleeping"
+
+maternalLog <- subset(maternalhealth, select = c("Sleep_night_duration_bb1", "Marital_status", "EPDS_7"))
+
+
+summary(maternalLog)
+```
+
+
+```{r logreg data cleanup}
+# Convert hh:mm character to numeric hours
+maternalLog$sleep_duration_hours <- as.numeric(substr(maternalLog$Sleep_night_duration_bb1, 1, 2)) +
+                                    as.numeric(substr(maternalLog$Sleep_night_duration_bb1, 4, 5)) / 60
+
+
+# Recode sleep_night_duration_bb1 to binary:
+# 0 = ≥ 9 hours (good sleep), 1 = < 9 hours (short sleep)
+maternalLog$sleep_duration_binary[maternalLog$sleep_duration_hours >= 9] <- 0
+maternalLog$sleep_duration_binary[maternalLog$sleep_duration_hours < 9] <- 1
+
+
+
+
+# Clear invalid responses NA
+maternalLog <- subset(maternalLog, !is.na(sleep_duration_binary) & !is.na(Marital_status) & !is.na(EPDS_7))
+
+
+# Factorize Marital_status 
+maternalLog$Marital_status <- factor(maternalLog$Marital_status,
+                                     levels = c(1, 2, 3, 6),
+                                     labels = c("Single", "In a Relationship", "Separated/Divorced/Widow", "Other"))
+summary(maternalLog)
+
+
+# Check against frequencies
+table(maternalLog$sleep_duration_binary)
+table(maternalLog$Marital_status)
+table(maternalLog$EPDS_7)
+```
+
+
+```{r run logistic regression}
+maternalLogR <- glm(sleep_duration_binary ~ Marital_status + EPDS_7,
+             data = maternalLog, family = "binomial")
+
+
+# View results summary
+summary(maternalLogR)
+
+
+# Get ORs and 95%CIs
+exp(cbind(OR = coef(maternalLogR), confint(maternalLogR)))
+
+
+# Get pseudo R2
+1 - (maternalLogR$deviance / maternalLogR$null.deviance)
+```
+
+
+```{r VIF function}
+vif_func <- function(model) {
+  # Extract the model matrix
+  X <- model.matrix(model)[, -1]
+  
+  # Calculate VIF for each predictor
+  vif_values <- sapply(1:ncol(X), function(i) {
+    
+    # Fit the model
+    reg <- lm(X[, i] ~X[, -i])
+    
+    # Calculate VIF
+    1 / (1-summary(reg)$r.squared)
+  })
+  
+  # Name the VIF values with predictor names
+  names(vif_values) <- colnames(X)
+  
+  # Print results
+  return(vif_values)
+}
+```
+
+```{r check VIF}
+vif_func(maternalLogR)
+```
+None of our variables have VIF > 5, we have likely met the no multicollinearity assumption.
+
+```{r binned residuals for con. variable}
+# For EPDS_7, seen as continuous 
+performance::binned_residuals(maternalLogR, term = "EPDS_7")
+```
+The model fit is not great; Only an estimated 50% of data fit within the assumed linear relationship between the predictors and logit of the outcome.
+
+
+```{r test}
+# Check cross-tabulations to see if we have any perfect predictors
+table(maternalLog$sleep_duration_binary, maternalLog$EPDS_7)
+```
+
+Interpretation: Overall, the model predicted approximately 2.3% of the variance in the probability of experiencing shorter sleep durations (Pseudo R^2 = 0.023; AIC = 306.98). For each one-unit increase of the Mother having experienced unhappiness, was associated with a 1.39 times greater likelihood of reporting shorter sleep duration (95% CI = 1.05, 1.83; $\beta$ = 0.33, z = 2.34, p = .019). Those who were in a relationship had a 0.82 times lower likelihood of experiencing shorter sleep (95% CI = 0.21, 5.46; $\beta$ = -0.19, z = -0.25, p = .806), as compared to Mothers who identified as single. Similarly, Mothers who were separated, divorced, or widowed had 1.22 times the probability of experiencing shorter sleep (95% CI = 0.05, 15.83; $\beta$ = 0.20, z = 0.15, p = .883); Further, those identifying as "Other" increases by 6.94 (95% CI = 0.21, 243.04; $\beta$ = 1.94, z = 1.20, p = .231). There are potential misfit issues, there is evidence to suggest that one ordinal variable - EPDS_7 does not have a linear relationship with the outcome of sleep duration.
+

@@ -1,0 +1,305 @@
+---
+title: "Descriptive Analysis - Maha Raya, Desire Omotoye, Unison Park, Yamila Emanuel, Andrea Smith, Evie Starr"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r packages}
+library(labelled)
+```
+
+```{r import data}
+
+maternalhealth <- read.csv(file = "Dataset_maternal_mental_health_infant_sleep.csv")
+
+str(maternalhealth)
+glimpse(maternalhealth)
+
+maternalhealth <- set_variable_labels(maternalhealth,
+                                      Age= "Age of Mother",
+                                      Marital_status = "Marital Status",
+                                      Age_bb= "Age of Baby",
+                                      night_awakening_number_bb1= "Number of times baby woke up during the Night")
+maternalhealth$Marital_status <- factor(maternalhealth$Marital_status, 
+                                        levels = c(1,2,3,6),
+                                        labels = c("Single", "In a Relationship", "Separated/Divorced/Widowed", "Other"))
+maternalhealth$night_awakening_number_bb1 <- factor(maternalhealth$night_awakening_number_bb1, levels =c(0,1,2,3,4,5,6,7,8,10))
+```
+
+```{r codes needed}
+#Codes Needed
+Mode <- function(x, na.rm = FALSE) {
+  if(na.rm){
+    x = x[!is.na(x)]
+  }
+  ux <- unique(x)
+  return(ux[which.max(tabulate(match(x, ux)))])
+}
+
+Range = function(x) {
+  max(x, na.rm = TRUE) - min(x, na.rm = TRUE)
+}
+
+Std.error <- function(x) {
+  sd(x, na.rm = TRUE)/sqrt(length(x[!is.na(x)]))
+}
+
+cat.desc <- function(x)list(
+  Frequency = table(x),
+  Proportion = (table(x)/length(x[!is.na(x)]))
+)
+
+moDisp = function(x) 
+  # Nest range function
+  Range = function(x) {
+    max(x, na.rm = TRUE) - min(x, na.rm = TRUE)
+  } 
+
+Std.error <- function(x) {
+  sd(x, na.rm = TRUE)/sqrt(length(x[!is.na(x)]))
+} 
+
+Kurtosis <- function(x) {
+  # Calculate mean
+  mean_x <- mean(x)
+  # Calculate standard deviation
+  sd_x <- sd(x)
+  # Calculate fourth central moment
+  fourth_moment <- mean((x - mean_x)^4)
+  # Calculate kurtosis
+  kurtosis <- fourth_moment / (sd_x^4)
+  # Return excess kurtosis
+  return(kurtosis - 3)
+} 
+
+moPos = function(x) {
+  moP <- c("Quantile" = quantile(x), 
+           "Interquartile Range" = IQR(x))
+  
+  return(moP)
+}
+
+moCent = function(x){
+  # Nested mode function
+  Mode <- function(x, na.rm = TRUE) {
+    if((length(unique(x) != nrow(x)))) {
+      if(na.rm){
+        x = x[!is.na(x)]
+      }
+      ux <- unique(x)
+      return(ux[which.max(tabulate(match(x, ux)))])
+    }
+    # If there is no mode, returns "NA"
+    else{
+      return(NA)
+    }}
+  
+  moa <- c("Mean" = mean(x), 
+           "Median" = median(x), 
+           "Mode" = Mode(x))
+  
+  return(moa)
+}
+
+moPos = function(x) {
+  moP <- c("Quantile" = quantile(x), 
+           "Interquartile Range" = IQR(x))
+  
+  return(moP)
+}
+#Age of mother continuous
+cat.desc(maternalhealth$Age)
+Range(maternalhealth$Age)
+mean(maternalhealth$Age, na.rm =TRUE)
+sd(maternalhealth$Age, na.rm =TRUE)
+
+#Marital Status (categorical)
+cat.desc(maternalhealth$Marital_status)
+timeline_table <- table(maternalhealth$Marital_status)
+timeline_table
+
+#night_awakening_number_bb1 (continuous)
+cat.desc(maternalhealth$night_awakening_number_bb1)
+summary(maternalhealth$night_awakening_number_bb1)
+Range(maternalhealth$night_awakening_number_bb1)
+mean(maternalhealth$night_awakening_number_bb1, na.rm =TRUE)
+sd(maternalhealth$night_awakening_number_bb1, na.rm =TRUE)
+
+#Age of infant #categorical
+cat.desc(maternalhealth$Age_bb)
+table(maternalhealth$Marital_status)
+
+
+```
+
+```{r Data Scatterplot }
+#library(ggplot2)
+#library(ggstats)
+#library(haven)
+
+table(maternalhealth$Age)
+class(maternalhealth$Age)
+str(maternalhealth$Age)
+
+table(maternalhealth$Age_bb)
+class(maternalhealth$Age_bb)
+
+#-------Basic plot Using variables: Age(age of mother) & Age_bb(age of baby in months)-------
+scatterMaternalHealth <- ggplot(maternalhealth, aes(x = Age, y = Age_bb)) +
+  geom_point() +
+  # stat_smooth is the stat equivalent of geom_smooth, "lm" is "linear model" (default is "loess")
+  stat_smooth(method = "lm")
+
+scatterMaternalHealth
+
+#Night Awakenings*****************************************************************
+scatterMaternalHealthNight <- ggplot(maternalhealth, aes(x = Age, y = night_awakening_number_bb1)) +
+  geom_point() +
+  # stat_smooth is the stat equivalent of geom_smooth, "lm" is "linear model" (default is "loess")
+  stat_smooth(method = "lm")
+
+scatterMaternalHealthNight
+
+#-----Detailed plot using varibles: Age(age of mother) & Age_bb(age of baby in months) & night_awakening_number_bb1(number of times baby wakes up at night)--------
+scatterMaternalHealthGroup <- ggplot(maternalhealth, aes(x = Age, y = Age_bb)) +
+  geom_point(aes(color = factor(night_awakening_number_bb1)), 
+             shape = 18, 
+             alpha = 0.7) +
+  stat_smooth(aes(color = factor(night_awakening_number_bb1)), 
+                  method = "loess", 
+              na.rm = TRUE,
+              # Removing the standard error 
+              se = FALSE, 
+              # Change linewidth
+              linewidth = 0.5, 
+              # Change linetype
+              linetype = "dashed") +
+  labs(title = "Age of Babies with Age of Mother's", 
+       caption = "N = 410", 
+       color = "Night Awakening's in First Year") +
+  xlab("Age of Mother in years") +
+  ylab("Age of Baby in Months") +
+  scale_color_brewer(palette = "Paired") +
+  theme_minimal()
+  
+
+scatterMaternalHealthGroup
+
+# ------Detailed plot with Facets using varibles: Age(age of mother) & Age_bb(age of baby in months) & night_awakening_number_bb1(number of times baby wakes up at night)--------
+table(maternalhealth$night_awakening_number_bb1)
+class(maternalhealth$night_awakening_number_bb1)
+str(maternalhealth$night_awakening_number_bb1)
+
+scatterMaternalHealthFacets <- ggplot(maternalhealth, aes(x = Age, y = Age_bb)) +
+  geom_point(aes(color = factor(night_awakening_number_bb1)), 
+             shape = 18, alpha = 0.7) +
+  stat_smooth(color = "purple", 
+              method = "loess", #helps handle outliers
+              na.rm = TRUE, 
+              se = FALSE, 
+              linewidth = 0.5, 
+              linetype = "dashed") +
+  facet_wrap(vars(night_awakening_number_bb1)) +
+  labs(title = "Age of Babies with Mother's Age by Night Awakening's in First Year",
+       #caption = "N = 846", 
+       color = "Night Awakening's") +
+  xlab("Age of Mother in years") +
+  ylab("Age of Baby in Months") +
+  scale_color_brewer(palette = "Paired") +
+  scale_y_continuous(breaks = c(1, 2, 3), 
+                     labels = c("3-6Mo.", "6-9Mo.", "9-12Mo.")) + # Adds custom y-axis labels
+  theme_minimal()
+
+scatterMaternalHealthFacets
+
+
+#------Detailed plot with Facets using varibles: Age(age of mother) by Age_bb(age of baby in months) & night_awakening_number_bb1(number of times baby wakes up at night)--------
+scatterMaternalHealthFacetFinal <- ggplot(maternalhealth, aes(x = Age, y = night_awakening_number_bb1)) +
+  geom_point(aes(color = factor(Age_bb)), 
+             shape = 18, alpha = 0.7) +
+  stat_smooth(color = "purple", 
+              method = "loess", #helps handle outliers
+              na.rm = TRUE, 
+              se = FALSE, 
+              linewidth = 0.5, 
+              linetype = "dashed") +
+  facet_wrap(vars(Age_bb)) +
+  labs(title = "Mother's Age with Night Awakening's in First Year by Age of Babies",
+       caption = "N = 410", 
+       color = "Age of Babies") +
+  xlab("Age of Mother in years") +
+  ylab("Night Awakening's") +
+  scale_color_brewer(palette = "Paired") #+
+  #scale_y_continuous(breaks = c(1, 2, 3), 
+                     #labels = c("3-6Mo.", "6-9Mo.", "9-12Mo.")) + # Adds custom y-axis labels
+  theme_minimal()
+
+scatterMaternalHealthFacetFinal
+```
+```{r Maternal Scatterplot}
+#Basic plot Using variables: Age(age of mother) & night_awakening_number_bb1(Night awakenings)*****************************************************************
+scatterMaternalHealthNight <- ggplot(maternalhealth, aes(x = Age, y = night_awakening_number_bb1)) +
+  geom_point() +
+  # stat_smooth is the stat equivalent of geom_smooth, "lm" is "linear model" (default is "loess")
+  stat_smooth(method = "loess") +
+  labs(title = "Mother's Age with Night Awakening's in First Year",
+       caption = "N = 410", 
+       color = "Age of Babies") +
+  xlab("Age of Mother in years") +
+  ylab("Night Awakening's") +
+  scale_color_brewer(palette = "Paired")
+
+scatterMaternalHealthNight 
+
+#------Detailed plot with Facets using variables: Age(age of mother) & night_awakening_number_bb1(number of times baby wakes up at night) by Age_bb(age of baby in months)--------
+
+# Remove rows with NA values in the Age_bb column using na.omit()
+maternalhealth_filtered <- na.omit(maternalhealth)
+
+# Creation of Scatterplot
+scatterMaternalHealthFacetFinal <- ggplot(maternalhealth_filtered, aes(x = Age, y = night_awakening_number_bb1)) +
+  geom_point(aes(color = factor(Age_bb)), 
+             shape = 18, alpha = 0.7) +
+  stat_smooth(color = "purple", 
+              method = "loess", #helps handle outliers
+              na.rm = TRUE, 
+              se = FALSE, 
+              linewidth = 0.5, 
+              linetype = "dashed") +
+  facet_wrap(vars(Age_bb)) +
+  labs(title = "Mother's Age with Night Awakening's in First Year by Age of Babies",
+       caption = "N = 410", 
+       color = "Age of Babies") +
+  xlab("Age of Mother in years") +
+  ylab("Night Awakening's") +
+  scale_color_brewer(palette = "Paired", labels = c("3-6Mo.", "6-9Mo.", "9-12Mo.")) + # Adds custom legend labels)
+  theme_minimal() +
+  theme(strip.text = element_blank())  # Remove facet labels (numbers)
+
+scatterMaternalHealthFacetFinal
+```
+
+```{r barchart}
+
+barinfant <- ggplot(clean_barchart, aes(factor(Age_bb))) +
+   geom_bar(aes(fill = factor(Age_bb)), alpha = 0.8, width = 0.8) + 
+  geom_text(aes(y = after_stat(count), label = paste("n = ", after_stat(count))), stat = "count", vjust = -0.5) +
+  geom_text(stat = "prop", vjust = 1.5) +
+  labs(title = "Infant Age", 
+       caption = "N = 1047") + 
+  xlab("Infant Age") + 
+  ylab("Count") +
+  scale_fill_brewer(palette = "Spectral") +
+  scale_x_continuous(breaks = c(1, 2, 3), labels = c("3-6Mo.", "6-9Mo.", "9-12Mo.")) + 
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+

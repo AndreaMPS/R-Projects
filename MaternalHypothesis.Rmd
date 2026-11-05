@@ -1,0 +1,219 @@
+---
+title: "Hypothesis Testing"
+Yamila Emanuel, Andrea Smith, Evie Starr, Unison Park, Maha Raya, Desire Omotoye
+output: html_notebook
+---
+```{r load dataset}
+maternalhealth <- read.csv(file = "Dataset_maternal_mental_health_infant_sleep.csv")
+str(maternalhealth)
+library(ggplot2)
+```
+#Research Question
+How does a baby's age influence their preference of being put to sleep by parents ?
+#Question 1
+Null hypothesis (H0: μ < 0.8): The mean number of infant night awakenings (age range: 3 - 6 months)  is equal to 0.8. 
+Alternate hypothesis (H1:μ > 0.8): The mean number of infant night awakenings  (age range: 3 - 6 months) is greater than  0.8. 
+
+The purpose of this test is to evaluate whether the observed sample mean of infant night awakenings deviates significantly from the hypothesized mean of 0.8 awakenings per night. We can see if the typical number of night awakenings aligns with expectations based on previous studies or if there are other factors influencing the sleep patterns. 
+Reference: Galland, B. C., Taylor, B. J., Elder, D. E., & Herbison, P. (2012). Normal sleep patterns in infants and children: a systematic review of observational studies. Sleep medicine reviews, 16(3), 213–222. https://doi.org/10.1016/j.smrv.2011.06.001
+
+#Question 2:t-test
+t-test Null hypothesis (H0): There is no relationship between a mother’s marital status (Marital_status)  and her baby’s sleep pattern (night_awakening_number_bb1). 
+µ1=µ2
+t-test Alternate hypothesis (H1): There is no relationship between a mother’s marital status (Marital_status) and her baby’s sleep pattern (night_awakening_number_bb1). 
+µ1≠µ2
+To assess whether our data meets the assumptions for conducting an independent sample t-test, we will first subset the data based on the categorical grouping variable, Marital_status ( 1 = single,  2 =  in a relationship).  We will examine the distribution of the continuous variable (number of infant night awakenings) for each group using  Q-Q plot and histogram to visually assess normality. Afterwards we will formally check the variance equality within each group using the variance test (var.test).
+```{r t-test}
+maternalhealth$Marital_status <- factor(maternalhealth$Marital_status, 
+                            levels = c("1", 
+                                       "2"     ), 
+                            ordered = TRUE)
+
+str(maternalhealth$Marital_status)
+2
+t.test(night_awakening_number_bb1 ~ Marital_status, data = maternalhealth, alternative = "two.sided",
+       var.equal = FALSE)
+
+```
+
+#Question 3: Chi-square
+Chi-square Null hypothesis (H0): There is no relationship between the age of the baby (Age_bb)  and the method in which the baby falls asleep (how_falling_asleep_bb1). 
+H0=0
+Chi-square Alternate hypothesis (H1): There is a relationship between the age of the baby (Age_bb)  and the method in which the baby falls asleep (how_falling_asleep_bb1).
+H1≠0
+```{r chi-square}
+pregSleep <- subset(maternalhealth, select = c("Age_bb", "how_falling_asleep_bb1"))
+pregSleep$Age_bb <- as.character(pregSleep$Age_bb)
+pregSleep$how_falling_asleep_bb1<-as.character(pregSleep$how_falling_asleep_bb1)
+
+## Assumptions check (Meets the assumption)
+table(pregSleep$Age_bb, pregSleep$how_falling_asleep_bb1)
+# 15 total cells; 8 are under 5; make sure 80% are over at least 5 and over
+#12/12 = 100% 
+
+chiSq <- chisq.test(pregSleep$Age_bb, y = pregSleep$how_falling_asleep_bb1)
+chiSq
+```
+#Question 4: Variables selected for multiple linear regression analysis
+Variables from the dataset selected for multiple linear regression analysis, and the outcome with text that describes how we will assess if our data meet assumptions for the statistical test: 
+*Predictor: EPDS scale
+*Predictor: Duration of Sleep
+*Outcome: Infant night awakening
+```{r standardization}
+maternalhealth_df1 <- maternalhealth
+# Step 1: Convert to decimal hours
+maternalhealth_df1$Sleep_night_duration_bb1 <- sapply(strsplit(as.character(maternalhealth$Sleep_night_duration_bb1), ":"), function(x) {
+  as.numeric(x[1]) + as.numeric(x[2])/60
+})
+
+maternalhealth_df1$EPDS_total <- rowSums(maternalhealth[, c("EPDS_1", "EPDS_2", "EPDS_3", "EPDS_4", "EPDS_5", "EPDS_6", "EPDS_7", "EPDS_8", "EPDS_9", "EPDS_10")], na.rm = TRUE)
+```
+```{r examine variables of interest}
+maternalhealth_interest <- maternalhealth_df1[, c("EPDS_total", "night_awakening_number_bb1", "Sleep_night_duration_bb1")]
+
+
+# Use the summary command to examine variables
+summary(maternalhealth_interest)
+```
+```{r handle NAs}
+sum(!is.na(maternalhealth_interest$EPDS_total))
+# 410
+sum(is.na(maternalhealth_interest$EPDS_total))
+# 1047882
+
+
+maternalhealth_interest$Sleep_night_duration_bb1[maternalhealth_interest$Sleep_night_duration_bb1 == 100.65] <- NA
+# This is re-coded as NA because it was originally in the dataset as “99:99”, which indicates that it is a missing value and not an extreme outlier
+
+
+clean_maternal_lm_data <- na.omit(maternalhealth_interest[, c("night_awakening_number_bb1", "EPDS_total", "Sleep_night_duration_bb1")])
+```
+```{r variables of interest recheck}
+
+
+summary(clean_maternal_lm_data)
+```
+**We will determine if our data meets the assumptions by running the following to assess the distribution of our data…**
+```{r regression}
+model1 <- lm(night_awakening_number_bb1 ~ EPDS_total + Sleep_night_duration_bb1, data = clean_maternal_lm_data)
+summary(model1)
+# Print coefficient 95% confidence intervals
+confint(model1)
+# Diagnostics 
+plot(model1, las = 1)
+```
+Based on our results, a number of assumptions are violated. Our data is heteroscedastic and has some outliers as seen with points labeled 240, 237, and 280 in the Q-Q Residuals plot as well as the Cooks *d* and Leverage. This is a limitation we faced here as these influential observations may skew our results and are an indication of non-normal residuals . It is also important to note here that Sleep_night_duration_bb1, which is one of our predictors, varies greatly across baby age groups; this may explain the heteroscedasticity of our data. Our dataset covers babies from the ages of 3-12 months old.
+```{r scatter-2}
+# Create plot of regression line for age 
+EPDS_reg_plot <- ggplot(clean_maternal_lm_data, aes(x = EPDS_total, y = night_awakening_number_bb1)) +
+  geom_point(na.rm = TRUE, 
+             shape = 12, 
+             alpha = 0.8, 
+             color = "purple4", 
+             # Adding jitter, as number of days is an integer (shows concentration of points)
+             position = position_jitter(width = 0.1)) +
+  geom_smooth(method = "lm", 
+              color = "blue2", 
+              linewidth = 0.3, 
+              se = FALSE, 
+              na.rm = TRUE) +
+  labs(title = "Night Awakenings vs EPDS Total") +
+  xlab("Edinburgh Postnatal Depression Scale (EDPS)") +
+  ylab("Night Awakenings") +
+  theme_minimal()
+
+
+EPDS_reg_plot
+
+
+Sleep_reg_plot <- ggplot(clean_maternal_lm_data, aes(x = Sleep_night_duration_bb1, y = night_awakening_number_bb1)) +
+  geom_point(na.rm = TRUE, 
+             shape = 12, 
+             alpha = 0.8, 
+             color = "purple4", 
+             # Adding jitter, as number of days is an integer (shows concentration of points)
+             position = position_jitter(width = 0.1)) +
+  geom_smooth(method = "lm", 
+              color = "blue2", 
+              linewidth = 0.3, 
+              se = FALSE, 
+              na.rm = TRUE) +
+  labs(title = "Night Awakenings vs Sleep Duration") +
+  xlab("Sleep Duration at Night (hrs)") +
+  ylab("Night Awakenings") +
+  theme_minimal()
+Sleep_reg_plot
+```
+*Note:* Noise was added to scatterplot to display clustering of points and points are not absolute reflections of the data. 
+The EPDS vs. Night Awakenings scatterplot shows a slight upward trend, which is reflected in the positive slope of the fitted regression line; The Sleep Duration vs. Night Awakenings plot shows a slight downward trend, indicating a negative slope of the fitted regression line. Neither of the plots above demonstrate a strong linear relationship because the spread is weak. The high variance in night awakenings across all values of both predictors suggests a nonlinear relationship.
+```{r VIF function}
+vif_func <- function(model1) {
+  # Extract the model matrix
+  X <- model.matrix(model1)[, -1]
+  
+  # Calculate VIF for each predictor
+  vif_values <- sapply(1:ncol(X), function(i) {
+    
+    # Fit the model
+    reg <- lm(X[, i] ~X[, -i])
+    
+    # Calculate VIF
+    1 / (1-summary(reg)$r.squared)
+  })
+  
+  # Name the VIF values with predictor names
+  names(vif_values) <- colnames(X)
+  
+  # Print results
+  return(vif_values)
+}
+```
+```{r check VIF}
+vif_func(model1)
+```
+The VIF for both predictors is 1.040626, which is well below 3. This indicates that our two predictors are not highly correlated with each other, and there's no concern about multicollinearity in our model. Our assumption of no multicollinearity is checked and we can confidently include both variables in a regression model.
+```{r evaluate outliers}
+# By Cook's d
+cooksd <- cooks.distance(model1)
+
+
+# Plot by Cooks d
+plot(cooksd, pch = "", cex = 2, main = "Influential Obs by Cooks d")
+abline(h = 4*mean(cooksd, na.rm = TRUE), col = "red")
+text(x = 1:length(cooksd) + 1, y = cooksd, 
+     labels = ifelse(cooksd > 4*mean(cooksd, na.rm = TRUE), 
+                     names(cooksd), ""), col = "red")
+
+
+# Look in dataset
+influential <- as.numeric(names(cooksd)[(cooksd > 4*mean(cooksd, na.rm = T))])
+
+
+list(maternalhealth_interest[influential, ])
+```
+We used Cook's distance to inspect and evaluate the outliers. After inspecting the outliers here, we have concluded that they are not extreme or a cause for concern. Initially, there was *one* outlier that was found that was was in the original dataset as "99:99", which indicates missing data, rather than a true time value. We re-coded it as NA and omitted it with the other NAs.
+```{r robust standard errors}
+# Load packages
+library("lmtest")
+#install.packages("sandwich")
+library("sandwich")
+
+
+# Re-run model
+model1_rb <- coeftest(model1, 
+                     vcov = vcovHC)
+
+
+model1_rb
+# Compare to original
+summary(model1)
+```
+Because we observed heteroscedasticity in our residuals, we have executed robust standard errors to account for this violation of assumption for multiple linear regression. From the results, we found that when accounting for heteroscedasticity, the intercept is highly significant, with a p-value of 2.86e-13, the EPDS_total is *not* significant, with a p-value of 0.1717, and the Sleep_night_duration_bb1 is also highly significant, with a p-value of 2.26e-08. The negative coefficient indicates that longer sleep duration is associated with fewer night awakenings. The overall F-statistic is 3.287e-09, and indicates that the independent variables in our model collectively explain a statistically significant amount of the variance in the dependent variable (night_awakening_number_bb1).
+
+#Question 5: Variables selected for logistic regression analysis
+Variables from the dataset selected for logistic regression analysis, and the outcome:
+*Predictor: Marital Status | Marital_status 
+*Predictor: Postnatal Depression Score | EPDS_7 | “Difficulty sleeping due to unhappiness"
+Reference for EPDS Scale - item 7: https://www.cope.org.au/health-professionals/health-professionals-3/calculating-score-epds/
+*Outcome: Infant Sleep Duration | Sleep_night_duration_bb1 | 0 is >= 9 hours (good sleep) vs 1 is < 9 hours (short sleep)
+Reference for average sleep duration parameter at 9 hours: https://pmc.ncbi.nlm.nih.gov/articles/PMC8627435/

@@ -33,3 +33,7 @@ year postpartum: a cross-sectional survey.
 https://zenodo.org/records/5070945#.Y8Oq4NJBwUE*
 
 **Note. Collaborative study with co-authors: Yamila Emanuel, Unison Park, Desire Omotoye, Evie Starr, Maha Raya*
+
+#                       ~ NHANES Descriptive's and Statistical Analysis ~
+
+**Introduction: Statistical analysis using a subset of NHANES data to determine relationships between, and significance of a series of health factors** 

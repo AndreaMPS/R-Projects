@@ -13,7 +13,7 @@ What is the relationship between a mothers health and marital status with her ba
 family functioning. Current research indicates a link between maternal well-being and infant sleep, suggesting that factors like
 age, marital status, and postpartum depression can lead to poorer sleep outcomes for newborns**
 
-**Getting Started - How to Run:** 
+**Reminder - How to Run:** 
 1. Note whether you would like to work in systematic parts or a total combined file [Maternalhealthcombined.rmd]
 2. Download and unzip appropriate files in one location
 3. Set working folder in R Studio as the location with the files 
@@ -39,7 +39,7 @@ https://zenodo.org/records/5070945#.Y8Oq4NJBwUE*
 
 **Introduction: Application of statistical testing using a subset of NHANES data to determine relationships between, and significance of a series of health factors** 
 
-**Getting Started - How to Run**
+**Reminder - How to Run**
 1. Download [asmith_Final.R] and [final25.RData] in one location
 2. Set working folder in R Studio as the location with the files
 3. Import or open [final25.RData] to load it into your R Studio environment 

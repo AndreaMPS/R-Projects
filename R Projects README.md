@@ -9,7 +9,7 @@ How does a baby's age influence their preference of being put to sleep by parent
 What is the relationship between a mothers health and marital status with her baby’s sleep pattern by age ?**
 
 
-**Introduction: Exploring the factors that influence infant sleep patterns because of how essential sleep is to both child development and 
+**Introduction: Retrospective analysis exploring the factors that influence infant sleep patterns because of how essential sleep is to both child development and 
 family functioning. Current research indicates a link between maternal well-being and infant sleep, suggesting that factors like
 age, marital status, and postpartum depression can lead to poorer sleep outcomes for newborns**
 

@@ -127,7 +127,7 @@ scatterMaternalHealthFacetFinal
  
 # Hypothesis and Analysis *****************************************
 
--Question 5: Variables selected for logistic regression analysis
+- Q5 Variables selected for logistic regression analysis
 Variables from the dataset selected for logistic regression analysis, and the outcome:
 *Predictor: Marital Status | Marital_status 
 *Predictor: Postnatal Depression Score | EPDS_7 | “Difficulty sleeping due to unhappiness"
@@ -137,7 +137,7 @@ Reference for average sleep duration parameter at 9 hours: https://pmc.ncbi.nlm.
 
 # Results and Interpretations ********************************************
 
--Question 6
+- Q6
 ```{r A scatterplot with estimated simple(ordinary) regression line}
 # Subset variables of interest
 nightage <- subset(maternalhealth, select = c("night_awakening_number_bb1", "Age"))
@@ -177,7 +177,7 @@ scatterLm
 ```
 With the addition of the fit line, it does not move through points in our actual data; The line is relatively flat, indicating that the relationship between the age of the mother and number of infant night awakenings is not specifically strong
 
--Question 7
+- Q7
 ```{r A simple linear regression analysis, including a residual plot from the above linear regression analysis}
 # Remove rows with NA values in the Age column using subset
 maternalhealth_first_filtered <- subset(maternalhealth, Age != "NA")
@@ -193,7 +193,7 @@ plot(nightageLM, las = 1)
 ```
 Interpretation: We fail to reject the null hypothesis that there is no association between age and number of night awakenings (F(1, 408) = 0.41, p = .524 | β = 0.05, t = 0.64, p = .524, R^2 = 0.001, Adjusted R^2 = -0.001). There is no significant association between age and night awakenings, such that one standard deviation increase in age predicts a 0.05 increase in night awakenings. However, we violate assumptions of normality of residuals and outliers are present; The residual distribution presents as having a right tail, indicating positive skewness. Thus, these results should be taken with caution.
 
--Question 9
+- Q9
 ```{r A logistic regression analysis }
 # Subset marital status, sleep duration of infant, and EPDS_7: "I have been so unhappy that I have had difficulty sleeping"
 

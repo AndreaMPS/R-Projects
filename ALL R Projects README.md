@@ -17,11 +17,11 @@ age, marital status, and postpartum depression can lead to poorer sleep outcomes
 1. Note whether you would like to work in systematic parts or a total combined file [Maternalhealthcombined.rmd]
 2. Download and unzip appropriate files in one location
 3. Set working folder in R Studio as the location with the files 
-    4.) Import dataset [Dataset_maternal_mental_health_infant_sleep.rmd] into R studio environment
-    5.) Open [Maternalhealthvisualization.rmd] and run the chunks of code
-    6.) Open [MaternalDescriptive.rmd] and run the chunks of code
-    7.) Open [MaternalHypothesis.rmd] and run the chunks of code
-    8.) Open [Maternalresults.rmd] and run the chunks of code**
+4. Import dataset [Dataset_maternal_mental_health_infant_sleep.rmd] into R studio environment
+5. Open [Maternalhealthvisualization.rmd] and run the chunks of code
+6. Open [MaternalDescriptive.rmd] and run the chunks of code
+7. Open [MaternalHypothesis.rmd] and run the chunks of code
+8. Open [Maternalresults.rmd] and run the chunks of code
 
   *Original Study Source: Sandoz, V., Lacroix, A., Stuijfzand, S., Bickle Graz, M., & Horsch,
 A. (2022). Maternal Mental Health Symptom Profiles and Infant Sleep: A Cross
@@ -39,8 +39,8 @@ https://zenodo.org/records/5070945#.Y8Oq4NJBwUE*
 
 **Introduction: Application of statistical testing using a subset of NHANES data to determine relationships between, and significance of a series of health factors** 
 
-**Getting Started - How to Run
-    1.) Download [asmith_Final.R] and [final25.RData] in one location
-    2.) Set working folder in R Studio as the location with the files
-    3.) Import or open [final25.RData] to load it into your R Studio environment 
-    4.) Open [asmith_Final.R] and run the sets of code**
+**Getting Started - How to Run**
+1. Download [asmith_Final.R] and [final25.RData] in one location
+2. Set working folder in R Studio as the location with the files
+3. Import or open [final25.RData] to load it into your R Studio environment 
+4. Open [asmith_Final.R] and run the sets of code

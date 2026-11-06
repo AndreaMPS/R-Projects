@@ -2,7 +2,12 @@
 
  #                          ~ Maternal Mental Health Impact on Infant Sleep ~ 
 
-**Research Question: What factor(s) influence the frequency of nighttime awakenings in infants during their first year of life?**
+**Primary Research Question: What factor(s) influence the frequency of nighttime awakenings in infants during their first year of life?**
+
+**Secondary Research Question(s): What is the relationship between a mother’s marital status and her baby’s sleep pattern?
+How does a baby's age influence their preference of being put to sleep by parents ?
+What is the relationship between a mothers health and marital status with her baby’s sleep pattern by age ?**
+
 
 **Introduction: Exploring the factors that influence infant sleep patterns because of how essential sleep is to both child development and 
 family functioning. Current research indicates a link between maternal well-being and infant sleep, suggesting that factors like
@@ -26,3 +31,5 @@ https://doi.org/10.3390/diagnostics12071625*
 maternal mental health symptom profiles on infant sleep during the first
 year postpartum: a cross-sectional survey.
 https://zenodo.org/records/5070945#.Y8Oq4NJBwUE*
+
+*Note. Collaborative study with authors: Yamila Emanuel, Unison Park, Desire Omotoye, Evie Starr, Maha Raya*

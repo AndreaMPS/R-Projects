@@ -32,4 +32,4 @@ maternal mental health symptom profiles on infant sleep during the first
 year postpartum: a cross-sectional survey.
 https://zenodo.org/records/5070945#.Y8Oq4NJBwUE*
 
-*Note. Collaborative study with authors: Yamila Emanuel, Unison Park, Desire Omotoye, Evie Starr, Maha Raya*
+**Note. Collaborative study with co-authors: Yamila Emanuel, Unison Park, Desire Omotoye, Evie Starr, Maha Raya*

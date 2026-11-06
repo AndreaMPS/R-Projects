@@ -1,7 +1,6 @@
 ---
 title: "Maternal and Infant Health Study - Andrea's Combined Code"
 author: "Andrea Smith"
-date: "2026-11-06"
 output: html_document
 ---
 

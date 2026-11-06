@@ -13,10 +13,10 @@ What is the relationship between a mothers health and marital status with her ba
 family functioning. Current research indicates a link between maternal well-being and infant sleep, suggesting that factors like
 age, marital status, and postpartum depression can lead to poorer sleep outcomes for newborns**
 
-**Getting Started - How to Run: 
-    1.) Note whether you would like to work in systematic parts or a total combined file [Maternalhealthcombined.rmd]
-    2.) Download and unzip appropriate files in one location
-    3.) Set working folder in R Studio as the location with the files 
+**Getting Started - How to Run:** 
+1. Note whether you would like to work in systematic parts or a total combined file [Maternalhealthcombined.rmd]
+2. Download and unzip appropriate files in one location
+3. Set working folder in R Studio as the location with the files 
     4.) Import dataset [Dataset_maternal_mental_health_infant_sleep.rmd] into R studio environment
     5.) Open [Maternalhealthvisualization.rmd] and run the chunks of code
     6.) Open [MaternalDescriptive.rmd] and run the chunks of code

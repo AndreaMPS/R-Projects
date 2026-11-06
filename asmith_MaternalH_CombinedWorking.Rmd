@@ -19,7 +19,7 @@ str(maternalhealth)
 ```
 
 # Descriptive Statistics **************************************
-```{r Catergorical Function, include = FALSE}
+```{r Categorical Function, include = FALSE}
 cat.desc <- function(x)list(
   Frequency = table(x),
   Proportion = (table(x)/length(x[!is.na(x)]))

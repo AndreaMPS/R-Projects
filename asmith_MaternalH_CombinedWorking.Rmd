@@ -6,7 +6,7 @@ output: html_document
 ---
 
 # *This file contains combined independently written code from my main responsibilities in the Maternal and Infant Health study. The
-residual code in the [Maternalhealthcombined.rmd] file was written both collaboratively and with additional independent coding by my co-authors.
+# residual code in the [Maternalhealthcombined.rmd] file was written both collaboratively and with additional independent coding by my co-authors.
 
 #Load packages
 ```{r loading packages, include = FALSE}
